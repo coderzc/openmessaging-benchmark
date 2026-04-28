@@ -83,4 +83,12 @@ public class Workload {
     public int testDurationMinutes;
 
     public int warmupDurationMinutes = 1;
+
+    /**
+     * If > 0, after warmup the consumers are paused for exactly this many seconds before being
+     * automatically resumed and the measurement window starts. Use this when you want time-based
+     * backlog accumulation (e.g. to ensure data is offloaded to tiered storage before consumers
+     * start draining), as an alternative to size-based {@link #consumerBacklogSizeGB}.
+     */
+    public int consumeDelaySeconds = 0;
 }

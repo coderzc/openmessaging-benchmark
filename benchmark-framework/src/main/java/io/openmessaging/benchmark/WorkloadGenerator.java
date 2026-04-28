@@ -164,6 +164,7 @@ public class WorkloadGenerator implements AutoCloseable {
         }
 
         worker.resetStats();
+        applyConsumeDelayIfConfigured();
         log.info("----- Starting benchmark traffic ({}m)------", workload.testDurationMinutes);
 
         TestResult result = printAndCollectStats(workload.testDurationMinutes, TimeUnit.MINUTES);
@@ -251,6 +252,23 @@ public class WorkloadGenerator implements AutoCloseable {
     public void close() throws Exception {
         worker.stopAll();
         executor.shutdownNow();
+    }
+
+    private void applyConsumeDelayIfConfigured() throws IOException {
+        if (workload.consumeDelaySeconds <= 0) {
+            return;
+        }
+        worker.pauseConsumers();
+        log.info("----- Delaying consumption for {}s before measurement window -----",
+                workload.consumeDelaySeconds);
+        try {
+            Thread.sleep(workload.consumeDelaySeconds * 1000L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+        worker.resumeConsumers();
+        log.info("----- Consumers resumed after {}s delay -----", workload.consumeDelaySeconds);
     }
 
     private void createConsumers(List<String> topics) throws IOException {
